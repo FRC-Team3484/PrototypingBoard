@@ -1,5 +1,5 @@
 # PrototyingBoard
-A codebase for using our prototyping board, written in Python.
+A codebase for using our prototyping board, written in Python
 
 - 1x RoboRIO 1.0
 - 4x Talon SRX Motor Controllers
@@ -43,4 +43,9 @@ And deploy it to a RoboRIO using:
 robotpy deploy
 ```
 
-
+## To-Do
+- [ ] Create base motor class
+- [ ] Create base digital input class
+- [ ] Create base PWM input class
+- [ ] Connect together in `robot.py`
+- [ ] Use `PowerMotor` from `FRC3484_Lib` instead
