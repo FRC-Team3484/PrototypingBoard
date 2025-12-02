@@ -1,9 +1,9 @@
 from typing import override
 from wpilib import TimedRobot
 
-from src.button_input import ButtonInput
-from src.motor import Motor
-from src.pwm_input import PWMInput
+from src.io.button_input import ButtonInput
+from src.io.motor import Motor
+from src.io.pwm_input import PWMInput
 from src.mock_ds import MockDS
 
 from src.constants import PrototyingBoardConstants
