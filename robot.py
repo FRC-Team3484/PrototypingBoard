@@ -19,6 +19,11 @@ class MyRobot(TimedRobot):
         self._motor_3: Motor = Motor(PrototyingBoardConstants.Motors.MOTOR_2_CAN_ID)
         self._motor_4: Motor = Motor(PrototyingBoardConstants.Motors.MOTOR_2_CAN_ID)
 
+        self._motor_1_enabled: bool = False
+        self._motor_2_enabled: bool = False
+        self._motor_3_enabled: bool = False
+        self._motor_4_enabled: bool = False
+
         self._pwm_1: PWMInput = PWMInput(PrototyingBoardConstants.PWMInputs.PWM_1_CHANNEL)
         self._pwm_2: PWMInput = PWMInput(PrototyingBoardConstants.PWMInputs.PWM_2_CHANNEL)
         self._pwm_3: PWMInput = PWMInput(PrototyingBoardConstants.PWMInputs.PWM_3_CHANNEL)
@@ -42,12 +47,32 @@ class MyRobot(TimedRobot):
             self._mock_ds.start()
 
     @override
+    def teleopExit(self) -> None:
+        self._motor_1_enabled = False
+        self._motor_2_enabled = False
+        self._motor_3_enabled = False
+        self._motor_4_enabled = False
+
+    @override
     def teleopPeriodic(self) -> None:
         if src.config.MOTORS_ENABLED:
-            self._motor_1.set_power(self._pwm_1.get())
-            self._motor_2.set_power(self._pwm_2.get())
-            self._motor_3.set_power(self._pwm_3.get())
-            self._motor_4.set_power(self._pwm_4.get())
+            if abs(self._pwm_1.get()) <= PrototyingBoardConstants.PWMInputs.PWM_RESET_THRESHOLD:
+                self._motor_1_enabled = True
+            if abs(self._pwm_2.get()) <= PrototyingBoardConstants.PWMInputs.PWM_RESET_THRESHOLD:
+                self._motor_2_enabled = True
+            if abs(self._pwm_3.get()) <= PrototyingBoardConstants.PWMInputs.PWM_RESET_THRESHOLD:
+                self._motor_3_enabled = True
+            if abs(self._pwm_4.get()) <= PrototyingBoardConstants.PWMInputs.PWM_RESET_THRESHOLD:
+                self._motor_4_enabled = True
+            
+            if self._motor_1_enabled:
+                self._motor_1.set_power(self._pwm_1.get())
+            if self._motor_2_enabled: 
+                self._motor_2.set_power(self._pwm_2.get())
+            if self._motor_3_enabled:
+                self._motor_3.set_power(self._pwm_3.get())
+            if self._motor_4_enabled:
+                self._motor_4.set_power(self._pwm_4.get())
 
             if self._button_all_on.get():
                 self._motor_1.set_power(0.5)

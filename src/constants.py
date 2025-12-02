@@ -1,4 +1,5 @@
 class PrototyingBoardConstants:
+
     class Motors:
         MOTOR_1_CAN_ID: int = 1
         MOTOR_2_CAN_ID: int = 2
@@ -6,6 +7,8 @@ class PrototyingBoardConstants:
         MOTOR_4_CAN_ID: int = 4
 
     class PWMInputs:
+        PWM_RESET_THRESHOLD: float = 0.05
+        
         PWM_1_CHANNEL: int = 1
         PWM_2_CHANNEL: int = 2
         PWM_3_CHANNEL: int = 3
