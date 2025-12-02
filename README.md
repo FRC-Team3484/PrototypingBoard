@@ -4,7 +4,10 @@ A codebase for using our prototyping board, written in Python
 - 1x RoboRIO 1.0
 - 4x Talon SRX Motor Controllers
 - 4x PWM inputs
+  - For each, positive powers the motor up, negative powers the motor down
 - 10 digital inputs
+  - 2 for each motor, one steps up 5%, the other steps down 5%
+  - The other two buttons sets all to 50%, and the other sets all to 0%
 
 ## Installing
 Clone this repository:
