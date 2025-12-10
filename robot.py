@@ -1,10 +1,11 @@
 from typing import override
 from wpilib import TimedRobot
+import wpilib
 
 from src.io.button_input import ButtonInput
 from src.io.motor import Motor
 from src.io.pwm_input import PWMInput
-from src.mock_ds import MockDS
+from src.mock_ds import MockDriverStation
 
 from src.constants import PrototyingBoardConstants
 import src.config
@@ -13,7 +14,7 @@ class MyRobot(TimedRobot):
     def __init__(self) -> None:
         super().__init__()
 
-        self._mock_ds: MockDS = MockDS()
+        self._mock_ds: MockDriverStation = MockDriverStation()
         self._motor_1: Motor = Motor(PrototyingBoardConstants.Motors.MOTOR_1_CAN_ID)
         self._motor_2: Motor = Motor(PrototyingBoardConstants.Motors.MOTOR_2_CAN_ID)
         self._motor_3: Motor = Motor(PrototyingBoardConstants.Motors.MOTOR_2_CAN_ID)
@@ -41,10 +42,22 @@ class MyRobot(TimedRobot):
         self._button_all_on: ButtonInput = ButtonInput(PrototyingBoardConstants.DigitalInputs.BUTTON_ALL_ON_CHANNEL)
         self._button_all_off: ButtonInput = ButtonInput(PrototyingBoardConstants.DigitalInputs.BUTTON_ALL_OFF_CHANNEL)
 
+        self._print_timer: wpilib.Timer = wpilib.Timer()
+        self._print_timer.start()
+
     @override
-    def robotInit(self) -> None:
+    def disabledInit(self) -> None:
         if src.config.MOCK_DS_ENABLED:
             self._mock_ds.start()
+
+    @override
+    def robotPeriodic(self) -> None:
+        self._mock_ds.stop()
+
+        if not self.isEnabled():
+            if self._print_timer.hasElapsed(0.5):
+                print("Disabled")
+                self._print_timer.reset()
 
     @override
     def teleopExit(self) -> None:

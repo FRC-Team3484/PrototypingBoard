@@ -1,70 +1,68 @@
+from typing import override
+from commands2 import Subsystem
 from socket import socket, AF_INET, SOCK_DGRAM
-import threading
-import time
 
-class MockDS:
+class MockDriverStation(Subsystem):
     """
     Describes a mock driver station to enable the robot without user input
     """
+    
     def __init__(self) -> None:
-        self._active: bool = False
-        self._thread: threading.Thread | None = None
+        super().__init__()
+        self.active = False
+        self.send_count = 0
+        self.init_count = 0
+        
+        self.sock = socket(AF_INET, SOCK_DGRAM)
+        self.target_addr = ("127.0.0.1", 1110)
 
-    def _generate_packet(self, send_count: int, enabled: bool) -> bytes:
-        data: bytearray = bytearray()
-        data.append((send_count >> 8) & 0xFF)
-        data.append(send_count & 0xFF)
-        data.append(0x01)           # general data tag
-        data.append(0x04 if enabled else 0x00)
-        data.append(0x10)           # normal data request
-        data.append(0x00)           # red 1 station
-        return bytes(data)
-
-    def start(self) -> None:
-        """
-        Starts the mock driver station, and tries to enable the robot
-        """
-        if self._active:
-            return
-        self._active = True
-
-        def run() -> None:
-            sock: socket = socket(AF_INET, SOCK_DGRAM)
-            send_count = 0
-            next_time: float = time.perf_counter()
-
-            packet: bytes
-            send_count: int
-
-            for _ in range(10):
-                if not self._active:
-                    break
-
-                packet = self._generate_packet(send_count, enabled=False)
-                send_count = (send_count + 1) & 0xFFFF
-
-                _ = sock.sendto(packet, ("127.0.0.1", 1110))
-
-                next_time += 0.020
-                time.sleep(max(0, next_time - time.perf_counter()))
-
-            while self._active:
-                packet = self._generate_packet(send_count, enabled=True)
-                send_count = (send_count + 1) & 0xFFFF
-                _ = sock.sendto(packet, ("127.0.0.1", 1110))
-
-                next_time += 0.020
-                time.sleep(max(0, next_time - time.perf_counter()))
-
-            sock.close()
-
-        self._thread = threading.Thread(target=run, daemon=True)
-        self._thread.start()
+    def start(self):
+        self.active = True
+        self.send_count = 0
+        self.init_count = 0
 
     def stop(self):
-        """
-        Shuts down the mock driver station
-        """
-        self._active = False
-        if self._thread and self._thread.is_alive():
-            self._thread.join()
+        self.active = False
+
+    @override
+    def periodic(self):
+        if not self.active:
+            return
+
+        packet = self._generate_packet()
+        
+        try:
+            self.sock.sendto(packet, self.target_addr)
+        except OSError:
+            pass
+
+        self.send_count = (self.send_count + 1) & 0xFFFF
+
+
+    def _generate_packet(self):
+        data: bytearray = bytearray()
+
+        # Sequence number
+        data.append((self.send_count >> 8) & 0xFF)
+        data.append(self.send_count & 0xFF)
+
+        # Data tag
+        data.append(0x01)
+
+        # Enabled flag (0x04 = teleop enabled)
+        mode = 0x04
+
+        # First ~10 packets need to be disabled or else the robot won't enable
+        if self.init_count < 10:
+            mode = 0x00
+            self.init_count += 1
+
+        data.append(mode)
+
+        # Data request
+        data.append(0x10)
+
+        # Red 1 station
+        data.append(0x00)
+
+        return bytes(data)
