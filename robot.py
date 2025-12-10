@@ -52,7 +52,8 @@ class MyRobot(TimedRobot):
 
     @override
     def robotPeriodic(self) -> None:
-        self._mock_ds.stop()
+        if src.config.MOCK_DS_ENABLED:
+            self._mock_ds.update()
 
         if not self.isEnabled():
             if self._print_timer.hasElapsed(0.5):
@@ -68,6 +69,9 @@ class MyRobot(TimedRobot):
 
     @override
     def teleopPeriodic(self) -> None:
+        if src.config.MOCK_DS_ENABLED:
+            self._mock_ds.stop()
+
         if src.config.MOTORS_ENABLED:
             if abs(self._pwm_1.get()) <= PrototyingBoardConstants.PWMInputs.PWM_RESET_THRESHOLD:
                 self._motor_1_enabled = True

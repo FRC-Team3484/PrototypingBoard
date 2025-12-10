@@ -1,8 +1,7 @@
 from typing import override
-from commands2 import Subsystem
 from socket import socket, AF_INET, SOCK_DGRAM
 
-class MockDriverStation(Subsystem):
+class MockDriverStation:
     """
     Describes a mock driver station to enable the robot without user input
     """
@@ -24,8 +23,8 @@ class MockDriverStation(Subsystem):
     def stop(self):
         self.active = False
 
-    @override
-    def periodic(self):
+    def update(self):
+        # print(self.send_count)
         if not self.active:
             return
 
@@ -37,7 +36,6 @@ class MockDriverStation(Subsystem):
             pass
 
         self.send_count = (self.send_count + 1) & 0xFFFF
-
 
     def _generate_packet(self):
         data: bytearray = bytearray()
