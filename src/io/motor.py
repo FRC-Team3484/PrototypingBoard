@@ -8,10 +8,10 @@ class Motor:
         can_id (int): The CAN ID of the TalonSRX
         can_bus (str): The CAN bus to use
     """
-    def __init__(self, can_id: int, can_bus: str = "rio") -> None:
+    def __init__(self, can_id: int) -> None:
         self._can_id: int = can_id
 
-        self._motor: TalonSRX = TalonSRX(can_id, can_bus)
+        self._motor: TalonSRX = TalonSRX(can_id)
         self._motor_config: TalonSRXConfiguration = TalonSRXConfiguration()
 
     def set_power(self, power: float) -> None:
