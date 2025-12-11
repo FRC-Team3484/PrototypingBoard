@@ -17,7 +17,7 @@ class SocketSubsystem(Subsystem):
         try:
             self._sock.sendto(data, self.ADDRESS)
         except OSError:
-            pass
+            print("SocketSubsystem: Failed to send data.")
 
 class EnableRobotCommand(Command):
     def __init__(self, socket: SocketSubsystem, is_robot_enabled:Callable[[], bool], max_tries: int = 500, diable_packets: int = 10) -> None:
