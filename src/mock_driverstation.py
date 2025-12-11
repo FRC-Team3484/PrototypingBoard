@@ -20,13 +20,13 @@ class SocketSubsystem(Subsystem):
             print("SocketSubsystem: Failed to send data.")
 
 class EnableRobotCommand(Command):
-    def __init__(self, socket: SocketSubsystem, is_robot_enabled:Callable[[], bool], max_tries: int = 500, diable_packets: int = 10) -> None:
+    def __init__(self, socket: SocketSubsystem, is_robot_enabled:Callable[[], bool], max_tries: int = 500, disable_packets: int = 10) -> None:
         super().__init__()
         self.addRequirements(socket)
         self._socket: SocketSubsystem = socket
         self._check_enabled: Callable = is_robot_enabled
         self._max_tries: int = max_tries
-        self._disable_packets = diable_packets
+        self._disable_packets = disable_packets
         self._n_tries: int = 0
     
     def runsWhenDisabled(self) -> bool:
@@ -36,6 +36,7 @@ class EnableRobotCommand(Command):
         self._n_tries = 0
 
     def execute(self) -> None:
+        print("EnableRobotCommand executed")
         if self._n_tries >= self._max_tries:
             return
 
@@ -76,6 +77,7 @@ class DisableRobotCommand(Command):
         self._n_tries = 0
 
     def execute(self) -> None:
+        print("DisableRobotCommand executed")
         if self._n_tries >= self._max_tries:
             return
 

@@ -1,6 +1,6 @@
 from typing import override
-from wpilib import TimedRobot
 import wpilib
+from commands2 import TimedCommandRobot
 
 from src.io.button_input import ButtonInput
 from src.io.motor import Motor
@@ -10,7 +10,7 @@ from src.mock_driverstation import SocketSubsystem, EnableRobotCommand, DisableR
 from src.constants import PrototyingBoardConstants
 import src.config
 
-class MyRobot(TimedRobot):
+class MyRobot(TimedCommandRobot):
     def __init__(self) -> None:
         super().__init__()
 
@@ -49,7 +49,8 @@ class MyRobot(TimedRobot):
     def disabledInit(self) -> None:
         self._print_timer.restart()
         if src.config.MOCK_DS_ENABLED:
-            EnableRobotCommand(self._socket, self.isEnabled, diable_packets=50).schedule()
+            print("Running command")
+            EnableRobotCommand(self._socket, self.isEnabled, disable_packets=50).schedule()
     @override
     def disabledPeriodic(self) -> None:
         if self._print_timer.advanceIfElapsed(0.5):
