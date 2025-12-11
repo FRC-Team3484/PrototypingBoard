@@ -27,6 +27,9 @@ class EnableRobotCommand(Command):
         self._max_tries: int = max_tries
         self._disable_packets = diable_packets
         self._n_tries: int = 0
+    
+    def runsWhenDisabled(self) -> bool:
+        return True
 
     def initialize(self) -> None:
         self._n_tries = 0
