@@ -5,8 +5,7 @@ import wpilib
 from src.io.button_input import ButtonInput
 from src.io.motor import Motor
 from src.io.pwm_input import PWMInput
-#from src.mock_ds import MockDriverStation
-from src.mock_driverstation import SocketSubsystem, EnableRobotCommand
+from src.mock_driverstation import SocketSubsystem, EnableRobotCommand, DisableRobotCommand
 
 from src.constants import PrototyingBoardConstants
 import src.config
@@ -15,7 +14,6 @@ class MyRobot(TimedRobot):
     def __init__(self) -> None:
         super().__init__()
 
-        #self._mock_ds: MockDriverStation = MockDriverStation()
         self._socket: SocketSubsystem = SocketSubsystem()
 
         self._motor_1: Motor = Motor(PrototyingBoardConstants.Motors.MOTOR_1_CAN_ID)
@@ -46,24 +44,20 @@ class MyRobot(TimedRobot):
         self._button_all_off: ButtonInput = ButtonInput(PrototyingBoardConstants.DigitalInputs.BUTTON_ALL_OFF_CHANNEL)
 
         self._print_timer: wpilib.Timer = wpilib.Timer()
-        self._print_timer.start()
 
     @override
     def disabledInit(self) -> None:
+        self._print_timer.restart()
         if src.config.MOCK_DS_ENABLED:
             EnableRobotCommand(self._socket, self.isEnabled, diable_packets=50).schedule()
-
     @override
-    def robotPeriodic(self) -> None:
-        '''
-        if src.config.MOCK_DS_ENABLED:
-            self._mock_ds.update()
-        '''
-
-        if not self.isEnabled():
-            if self._print_timer.hasElapsed(0.5):
-                print("Disabled")
-                self._print_timer.reset()
+    def disabledPeriodic(self) -> None:
+        if self._print_timer.advanceIfElapsed(0.5):
+            print("Disabled")
+        
+    @override
+    def teleopInit(self) -> None:
+        self._print_timer.restart()
 
     @override
     def teleopExit(self) -> None:
@@ -74,10 +68,12 @@ class MyRobot(TimedRobot):
 
     @override
     def teleopPeriodic(self) -> None:
-        '''
-        if src.config.MOCK_DS_ENABLED:
-            self._mock_ds.stop()
-        '''
+        if self._print_timer.hasElapsed(10.0):
+            self._print_timer.stop()
+            self._print_timer.reset()
+            print("Enabled for 10 seconds")
+            print("Disabling robot...")
+            DisableRobotCommand(self._socket, self.isDisabled).schedule()
 
         if src.config.MOTORS_ENABLED:
             if abs(self._pwm_1.get()) <= PrototyingBoardConstants.PWMInputs.PWM_RESET_THRESHOLD:
