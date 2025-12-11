@@ -22,6 +22,7 @@ class SocketSubsystem(Subsystem):
 class EnableRobotCommand(Command):
     def __init__(self, socket: SocketSubsystem, is_robot_enabled:Callable[[], bool], max_tries: int = 500, diable_packets: int = 10) -> None:
         super().__init__()
+        self.addRequirements(socket)
         self._socket: SocketSubsystem = socket
         self._check_enabled: Callable = is_robot_enabled
         self._max_tries: int = max_tries
@@ -65,6 +66,7 @@ class EnableRobotCommand(Command):
 class DisableRobotCommand(Command):
     def __init__(self, socket: SocketSubsystem, is_robot_disabled:Callable[[], bool], max_tries: int = 500) -> None:
         super().__init__()
+        self.addRequirements(socket)
         self._socket: SocketSubsystem = socket
         self._check_disabled: Callable = is_robot_disabled
         self._max_tries: int = max_tries
