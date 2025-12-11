@@ -5,7 +5,8 @@ import wpilib
 from src.io.button_input import ButtonInput
 from src.io.motor import Motor
 from src.io.pwm_input import PWMInput
-from src.mock_ds import MockDriverStation
+#from src.mock_ds import MockDriverStation
+from src.mock_driverstation import SocketSubsystem, EnableRobotCommand
 
 from src.constants import PrototyingBoardConstants
 import src.config
@@ -14,7 +15,9 @@ class MyRobot(TimedRobot):
     def __init__(self) -> None:
         super().__init__()
 
-        self._mock_ds: MockDriverStation = MockDriverStation()
+        #self._mock_ds: MockDriverStation = MockDriverStation()
+        self._socket: SocketSubsystem = SocketSubsystem()
+
         self._motor_1: Motor = Motor(PrototyingBoardConstants.Motors.MOTOR_1_CAN_ID)
         self._motor_2: Motor = Motor(PrototyingBoardConstants.Motors.MOTOR_2_CAN_ID)
         self._motor_3: Motor = Motor(PrototyingBoardConstants.Motors.MOTOR_2_CAN_ID)
@@ -48,12 +51,14 @@ class MyRobot(TimedRobot):
     @override
     def disabledInit(self) -> None:
         if src.config.MOCK_DS_ENABLED:
-            self._mock_ds.start()
+            EnableRobotCommand(self._socket, self.isEnabled, diable_packets=50).schedule()
 
     @override
     def robotPeriodic(self) -> None:
+        '''
         if src.config.MOCK_DS_ENABLED:
             self._mock_ds.update()
+        '''
 
         if not self.isEnabled():
             if self._print_timer.hasElapsed(0.5):
@@ -69,8 +74,10 @@ class MyRobot(TimedRobot):
 
     @override
     def teleopPeriodic(self) -> None:
+        '''
         if src.config.MOCK_DS_ENABLED:
             self._mock_ds.stop()
+        '''
 
         if src.config.MOTORS_ENABLED:
             if abs(self._pwm_1.get()) <= PrototyingBoardConstants.PWMInputs.PWM_RESET_THRESHOLD:
