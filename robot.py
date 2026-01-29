@@ -1,132 +1,141 @@
 from typing import override
 import wpilib
 from commands2 import TimedCommandRobot
+from wpilib import SmartDashboard, DriverStation
 
 from src.io.button_input import ButtonInput
 from src.io.motor import Motor
 from src.io.pwm_input import PWMInput
 from src.mock_driverstation import SocketSubsystem, EnableRobotCommand, DisableRobotCommand
 
-from src.constants import PrototyingBoardConstants
+from src.constants import PrototyingBoardConstants as PBC
 import src.config
 
 class MyRobot(TimedCommandRobot):
     def __init__(self) -> None:
         super().__init__()
 
-        self._socket: SocketSubsystem = SocketSubsystem()
+        self._socket            : SocketSubsystem = SocketSubsystem()
+        self._motors            : list[Motor] = []
+        self._motors_enabled    : list[bool] = []
+        self._motors_last_power : list[float] = []
 
-        self._motor_1: Motor = Motor(PrototyingBoardConstants.Motors.MOTOR_1_CAN_ID)
-        self._motor_2: Motor = Motor(PrototyingBoardConstants.Motors.MOTOR_2_CAN_ID)
-        self._motor_3: Motor = Motor(PrototyingBoardConstants.Motors.MOTOR_2_CAN_ID)
-        self._motor_4: Motor = Motor(PrototyingBoardConstants.Motors.MOTOR_2_CAN_ID)
+        for i in range(0, PBC.Motors.NUM_MOTORS):
+            self._motors.append(Motor(PBC.Motors.MOTOR_CAN_IDS[i]))
+            self._motors_last_power.append(0.0)
+            self._motors_enabled.append(False)
+        # End for
 
-        self._motor_1_enabled: bool = False
-        self._motor_2_enabled: bool = False
-        self._motor_3_enabled: bool = False
-        self._motor_4_enabled: bool = False
+        # self._print_timer: wpilib.Timer = wpilib.Timer()
+    # End def
 
-        self._pwm_1: PWMInput = PWMInput(PrototyingBoardConstants.PWMInputs.PWM_1_CHANNEL)
-        self._pwm_2: PWMInput = PWMInput(PrototyingBoardConstants.PWMInputs.PWM_2_CHANNEL)
-        self._pwm_3: PWMInput = PWMInput(PrototyingBoardConstants.PWMInputs.PWM_3_CHANNEL)
-        self._pwm_4: PWMInput = PWMInput(PrototyingBoardConstants.PWMInputs.PWM_4_CHANNEL)
-
-        self._button_motor_1_up: ButtonInput = ButtonInput(PrototyingBoardConstants.DigitalInputs.BUTTON_MOTOR_1_UP_CHANNEL)
-        self._button_motor_1_down: ButtonInput = ButtonInput(PrototyingBoardConstants.DigitalInputs.BUTTON_MOTOR_1_DOWN_CHANNEL)
-        self._button_motor_2_up: ButtonInput = ButtonInput(PrototyingBoardConstants.DigitalInputs.BUTTON_MOTOR_2_UP_CHANNEL)
-        self._button_motor_2_down: ButtonInput = ButtonInput(PrototyingBoardConstants.DigitalInputs.BUTTON_MOTOR_2_DOWN_CHANNEL)
-        self._button_motor_3_up: ButtonInput = ButtonInput(PrototyingBoardConstants.DigitalInputs.BUTTON_MOTOR_3_UP_CHANNEL)
-        self._button_motor_3_down: ButtonInput = ButtonInput(PrototyingBoardConstants.DigitalInputs.BUTTON_MOTOR_3_DOWN_CHANNEL)
-        self._button_motor_4_up: ButtonInput = ButtonInput(PrototyingBoardConstants.DigitalInputs.BUTTON_MOTOR_4_UP_CHANNEL)
-        self._button_motor_4_down: ButtonInput = ButtonInput(PrototyingBoardConstants.DigitalInputs.BUTTON_MOTOR_4_DOWN_CHANNEL)
-
-        self._button_all_on: ButtonInput = ButtonInput(PrototyingBoardConstants.DigitalInputs.BUTTON_ALL_ON_CHANNEL)
-        self._button_all_off: ButtonInput = ButtonInput(PrototyingBoardConstants.DigitalInputs.BUTTON_ALL_OFF_CHANNEL)
-
-        self._print_timer: wpilib.Timer = wpilib.Timer()
+    @override
+    def robotPeriodic(self):
+        SmartDashboard.putNumber("Battery Voltage", DriverStation.getBatteryVoltage())
 
     @override
     def disabledInit(self) -> None:
-        self._print_timer.restart()
-        if src.config.MOCK_DS_ENABLED:
-            print("Running command")
-            EnableRobotCommand(self._socket, self.isEnabled, disable_packets=50).schedule()
+        # self._print_timer.restart()
+        # if src.config.MOCK_DS_ENABLED:
+        #     print("Running command")
+        #     EnableRobotCommand(self._socket, self.isEnabled, disable_packets=50).schedule()
+
+        for i in range(0, PBC.Motors.NUM_MOTORS):
+            self._motors_enabled[i] = False
+            SmartDashboard.putNumber(f"motor_{i+1}_power", 0.0)
+            SmartDashboard.putBoolean(f"motor_{i+1}_en", False)
+            SmartDashboard.putNumber(f"motor_{i+1}_gearto", 0)
+            SmartDashboard.putBoolean(f"motor_{i+1}_invert", False)
+            self._motors_last_power[i] = 0.0
+        # End for
+
     @override
     def disabledPeriodic(self) -> None:
-        if self._print_timer.advanceIfElapsed(0.5):
-            print("Disabled")
+        # if self._print_timer.advanceIfElapsed(0.5):
+        #     print("Disabled")
+        pass
         
     @override
     def teleopInit(self) -> None:
-        self._print_timer.restart()
+        # self._print_timer.restart()
+        
+        for i in range(0, PBC.Motors.NUM_MOTORS):
+            self._motors_enabled[i] = False
+            SmartDashboard.putNumber(f"motor_{i+1}_power", 0.0)
+            SmartDashboard.putBoolean(f"motor_{i+1}_en", False)
+            SmartDashboard.putNumber(f"motor_{i+1}_gearto", 0)
+            SmartDashboard.putBoolean(f"motor_{i+1}_invert", False)
+            self._motors_last_power[i] = 0.0
+            self._motors[i].set_power(0.0)
+        # End for
+    # End def
 
     @override
     def teleopExit(self) -> None:
-        self._motor_1_enabled = False
-        self._motor_2_enabled = False
-        self._motor_3_enabled = False
-        self._motor_4_enabled = False
+        for i in range(0, PBC.Motors.NUM_MOTORS):
+            self._motors_enabled[i] = False
+            SmartDashboard.putBoolean(f"motor_{i+1}_en", False)
+            SmartDashboard.putNumber(f"motor_{i+1}_power", 0.0)
+            SmartDashboard.putNumber(f"motor_{i+1}_gearto", 0)
+            SmartDashboard.putBoolean(f"motor_{i+1}_invert", False)
+            self._motors_last_power[i] = 0.0
+            self._motors[i].set_power(0.0)
+        # End for
+    # End def
 
     @override
     def teleopPeriodic(self) -> None:
-        if self._print_timer.hasElapsed(10.0):
-            self._print_timer.stop()
-            self._print_timer.reset()
-            print("Enabled for 10 seconds")
-            print("Disabling robot...")
-            DisableRobotCommand(self._socket, self.isDisabled).schedule()
+        # if self._print_timer.hasElapsed(10.0):
+        #     self._print_timer.stop()
+        #     self._print_timer.reset()
+        #     print("Enabled for 10 seconds")
+        #     print("Disabling robot...")
+        #     DisableRobotCommand(self._socket, self.isDisabled).schedule()
+
 
         if src.config.MOTORS_ENABLED:
-            if abs(self._pwm_1.get()) <= PrototyingBoardConstants.PWMInputs.PWM_RESET_THRESHOLD:
-                self._motor_1_enabled = True
-            if abs(self._pwm_2.get()) <= PrototyingBoardConstants.PWMInputs.PWM_RESET_THRESHOLD:
-                self._motor_2_enabled = True
-            if abs(self._pwm_3.get()) <= PrototyingBoardConstants.PWMInputs.PWM_RESET_THRESHOLD:
-                self._motor_3_enabled = True
-            if abs(self._pwm_4.get()) <= PrototyingBoardConstants.PWMInputs.PWM_RESET_THRESHOLD:
-                self._motor_4_enabled = True
-            
-            if self._motor_1_enabled:
-                self._motor_1.set_power(self._pwm_1.get())
-            if self._motor_2_enabled: 
-                self._motor_2.set_power(self._pwm_2.get())
-            if self._motor_3_enabled:
-                self._motor_3.set_power(self._pwm_3.get())
-            if self._motor_4_enabled:
-                self._motor_4.set_power(self._pwm_4.get())
+            for i in range(0, PBC.Motors.NUM_MOTORS):
+                _pwrEntry = SmartDashboard.getEntry(f"motor_{i+1}_power")
+                _enEntry = SmartDashboard.getEntry(f"motor_{i+1}_en")
+                _followEntry = SmartDashboard.getEntry(f"motor_{i+1}_gearto")
+                _invertEntry = SmartDashboard.getEntry(f"motor_{i+1}_invert")
+                
+                _power = _pwrEntry.getDouble(0.0)
+                _follow : int = _followEntry.getInteger(0)
+                _invert : bool = _invertEntry.getBoolean(False)
+                self._motors_enabled[i] = _enEntry.getBoolean(False)
 
-            if self._button_all_on.get():
-                self._motor_1.set_power(0.5)
-                self._motor_2.set_power(0.5)
-                self._motor_3.set_power(0.5)
-                self._motor_4.set_power(0.5)
+                if (_follow > 0):
+                    if (_follow == i):
+                        _followEntry.setInteger(0)
+                    else:
+                        self._motors[i].follow(self._motors[_follow])
+                    # End if
+                # End if
 
-            if self._button_all_off.get():
-                self._motor_1.set_power(0)
-                self._motor_2.set_power(0)
-                self._motor_3.set_power(0)
-                self._motor_4.set_power(0)
+                self._motors[i].invert(_invert)
 
-            if self._button_motor_1_up.get():
-                self._motor_1.set_power(0.5)
+                if (not self._motors_enabled[i]):
+                    _power = 0.0
+                    # _pwrEntry.setDouble(_power) # Disabled so we can set motor speed before enabling the motor
+                elif (abs(_power) <= PBC.Motors.MOTOR_STOP_THRESHOLD):
+                    _power = 0.0
+                # End if
 
-            if self._button_motor_1_down.get():
-                self._motor_1.set_power(-0.5)
+                if (not self._motors[i].isFollowing()):
+                    self._motors[i].set_power(float(_power))
+                # End if
 
-            if self._button_motor_2_up.get():
-                self._motor_2.set_power(0.5)
+                if (_follow > 0):
+                    if (_follow == i):
+                        _followEntry.setInteger(0)
+                    else:
+                        self._motors[_follow].set_power(float(_power))
+                        SmartDashboard.putNumber(f"motor_{_follow}_power", _power)
+                    # End if
+                # End if
 
-            if self._button_motor_2_down.get():
-                self._motor_2.set_power(-0.5)
-
-            if self._button_motor_3_up.get():
-                self._motor_3.set_power(0.5)
-
-            if self._button_motor_3_down.get():
-                self._motor_3.set_power(-0.5)
-
-            if self._button_motor_4_up.get():
-                self._motor_4.set_power(0.5)
-
-            if self._button_motor_4_down.get():
-                self._motor_4.set_power(-0.5)
+            # End for
+        # End if
+    # End def
+# End class
