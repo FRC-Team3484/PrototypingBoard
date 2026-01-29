@@ -1,4 +1,6 @@
-from phoenix5 import TalonSRX, TalonSRXConfiguration, TalonSRXControlMode
+from __future__ import annotations
+from phoenix5 import TalonSRX, TalonSRXConfiguration, TalonSRXControlMode, FollowerType
+
 
 class Motor:
     """
@@ -13,6 +15,8 @@ class Motor:
 
         self._motor: TalonSRX = TalonSRX(can_id)
         self._motor_config: TalonSRXConfiguration = TalonSRXConfiguration()
+        self._following = 0
+    # End def
 
     def set_power(self, power: float) -> None:
         """
@@ -21,4 +25,22 @@ class Motor:
         Parameters:
             power (float): The power to set
         """
-        self._motor.set(TalonSRXControlMode.Current, power)
+        self._motor.set(TalonSRXControlMode.PercentOutput, power)
+    # End def
+
+    def follow(self, master : int) -> None:
+        self._following = master
+    # End def
+
+    def isFollowing(self) -> bool:
+        return (self._following > 0)
+    # End def
+
+    def invert(self, invert : bool) -> None:
+        self._motor.setInverted(invert)
+    # End def
+
+    def GetIMotorController(self) -> TalonSRX:
+        return self._motor
+    # End def
+# End class

@@ -1,18 +1,22 @@
 class PrototyingBoardConstants:
 
     class Motors:
-        MOTOR_1_CAN_ID: int = 1
-        MOTOR_2_CAN_ID: int = 2
-        MOTOR_3_CAN_ID: int = 3
-        MOTOR_4_CAN_ID: int = 4
+        MOTOR_STOP_THRESHOLD: float = 0.02
+        NUM_MOTORS : int = 4
+
+        MOTOR_CAN_IDS : list[int] = [ i+1 for i in range (0, NUM_MOTORS, 1) ]
+        # MOTOR_CAN_IDS: int = 2
+        # MOTOR_CAN_IDS: int = 3
+        # MOTOR_CAN_IDS: int = 4
 
     class PWMInputs:
         PWM_RESET_THRESHOLD: float = 0.05
+        NUM_PWM_CHANNELS : int = 4
         
-        PWM_1_CHANNEL: int = 1
-        PWM_2_CHANNEL: int = 2
-        PWM_3_CHANNEL: int = 3
-        PWM_4_CHANNEL: int = 4
+        PWM_CHANNEL_ID : list[int] = [ i+1 for i in range (1, NUM_PWM_CHANNELS, 1) ]
+        # PWM_2_CHANNEL: int = 2
+        # PWM_3_CHANNEL: int = 3
+        # PWM_4_CHANNEL: int = 4
 
     class DigitalInputs:
         BUTTON_MOTOR_1_UP_CHANNEL: int = 1
